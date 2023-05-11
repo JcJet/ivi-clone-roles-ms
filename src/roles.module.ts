@@ -4,6 +4,7 @@ import { RolesService } from './roles.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from './roles.entity';
+import { UserRoles } from "./roles_users.entity";
 
 @Module({
   imports: [
@@ -18,10 +19,10 @@ import { Role } from './roles.entity';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD.toString(),
       database: process.env.POSTGRES_DB,
-      entities: [Role],
+      entities: [Role, UserRoles],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([Role]),
+    TypeOrmModule.forFeature([Role, UserRoles]),
   ],
   controllers: [RolesController],
   providers: [RolesService],
