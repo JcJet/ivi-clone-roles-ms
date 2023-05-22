@@ -6,14 +6,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from './roles.entity';
 import { UserRoles } from './roles_users.entity';
 
-const databaseHost = process.env.DB_HOST || 'localhost';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
-      //envFilePath: '.env',
+      //isGlobal: true,
+      envFilePath: `.${process.env.NODE_ENV}.env`,
     }),
-    TypeOrmModule.forRoot({
+/*    TypeOrmModule.forRoot({
       type: 'postgres',
       host: databaseHost,
       port: 5432,
@@ -22,8 +21,8 @@ const databaseHost = process.env.DB_HOST || 'localhost';
       database: 'roles',
       entities: [Role, UserRoles],
       synchronize: true,
-    }),
-/*    TypeOrmModule.forRoot({
+    }),*/
+    TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
       port: Number(process.env.POSTGRES_PORT),
@@ -32,7 +31,7 @@ const databaseHost = process.env.DB_HOST || 'localhost';
       database: process.env.POSTGRES_DB,
       entities: [Role, UserRoles],
       synchronize: true,
-    }),*/
+    }),
     TypeOrmModule.forFeature([Role, UserRoles]),
   ],
   controllers: [RolesController],
