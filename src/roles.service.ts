@@ -1,20 +1,40 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  OnModuleInit,
+} from '@nestjs/common';
 import { RoleDto } from './dto/role.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from './roles.entity';
 import { Repository } from 'typeorm';
 import { UserRoles } from './roles_users.entity';
-import { AddUserRoleRecordDto } from "./dto/addUserRoleRecord.dto";
-import { UpdateUserRoleDto } from "./dto/updateUserRole.dto";
+import { AddUserRoleRecordDto } from './dto/addUserRoleRecord.dto';
+import { UpdateUserRoleDto } from './dto/updateUserRole.dto';
 
 @Injectable()
-export class RolesService {
+export class RolesService implements OnModuleInit {
   constructor(
     @InjectRepository(Role)
     private rolesRepository: Repository<Role>,
     @InjectRepository(UserRoles)
     private userRolesRepository: Repository<UserRoles>,
   ) {}
+  async onModuleInit() {
+    const initialRoles: RoleDto[] = [
+      { value: 'ADMIN', description: 'Admin user' },
+      { value: 'USER', description: 'User' },
+    ];
+    for (const roleDto of initialRoles) {
+      try {
+        await this.createRole(roleDto);
+      } catch (e) {
+        if (e.status != HttpStatus.CONFLICT) {
+          throw e;
+        }
+      }
+    }
+  }
   async createRole(dto: RoleDto) {
     const existingRole = await this.rolesRepository.findOneBy({
       value: dto.value,
@@ -23,7 +43,7 @@ export class RolesService {
     if (existingRole) {
       throw new HttpException(
         'Роль с таким названием уже существует',
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.CONFLICT,
       );
     }
     const rolesInsertResult = await this.rolesRepository.insert(dto);
@@ -80,7 +100,9 @@ export class RolesService {
   }
   async getUserRoles(userId: number) {
     const userRoles: Role[] = [];
-    const rolesUsers = await this.userRolesRepository.find({ where: { userId } });
+    const rolesUsers = await this.userRolesRepository.find({
+      where: { userId },
+    });
     for (const roleRecord of rolesUsers) {
       const role = await this.getRoleById(roleRecord.roleId);
       userRoles.push(role);

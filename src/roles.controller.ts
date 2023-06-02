@@ -1,10 +1,12 @@
-import { Controller } from '@nestjs/common';
+import {Controller, UseFilters} from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { RoleDto } from './dto/role.dto';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UpdateUserRoleDto } from "./dto/updateUserRole.dto";
+import {HttpExceptionFilter} from "./http-exception.filter";
 
 @Controller()
+@UseFilters(new HttpExceptionFilter())
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 

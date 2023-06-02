@@ -16,6 +16,7 @@ async function bootstrap() {
       },
     },
   });
+  await app.init();
   await app.startAllMicroservices().then(() => {
     console.log('Roles MS started.');
     console.log('Application variables:');
@@ -23,6 +24,5 @@ async function bootstrap() {
       console.log(`${var_name}: ${configService.get(var_name)}`);
     }
   });
-
 }
 bootstrap();
