@@ -2,7 +2,7 @@ import {Controller, UseFilters} from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { RoleDto } from './dto/role.dto';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { UpdateUserRoleDto } from "./dto/updateUserRole.dto";
+import { AddUserRoleDto } from "./dto/addUserRole.dto";
 import {HttpExceptionFilter} from "./http-exception.filter";
 
 @Controller()
@@ -31,7 +31,7 @@ export class RolesController {
     return await this.rolesService.deleteRoleByValue(data.value);
   }
   @MessagePattern({ cmd: 'addUserRoles' })
-  async addUserRoles(@Payload() data: { dto: UpdateUserRoleDto }) {
+  async addUserRoles(@Payload() data: { dto: AddUserRoleDto }) {
     return await this.rolesService.addUserRoles(data.dto);
   }
   @MessagePattern({ cmd: 'getUserRoles' })
@@ -39,7 +39,7 @@ export class RolesController {
     return await this.rolesService.getUserRoles(data.userId);
   }
   @MessagePattern({ cmd: 'deleteUserRoles' })
-  async deleteUserRoles(@Payload() data: { dto: UpdateUserRoleDto }) {
+  async deleteUserRoles(@Payload() data: { dto: AddUserRoleDto }) {
     return await this.rolesService.deleteUserRoles(data.dto);
   }
 }

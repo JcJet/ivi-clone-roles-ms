@@ -10,7 +10,7 @@ import { Role } from './roles.entity';
 import { Repository } from 'typeorm';
 import { UserRoles } from './roles_users.entity';
 import { AddUserRoleRecordDto } from './dto/addUserRoleRecord.dto';
-import { UpdateUserRoleDto } from './dto/updateUserRole.dto';
+import { AddUserRoleDto } from './dto/addUserRole.dto';
 
 @Injectable()
 export class RolesService implements OnModuleInit {
@@ -73,9 +73,8 @@ export class RolesService implements OnModuleInit {
     }
   }
 
-  async addUserRoles(dto: UpdateUserRoleDto) {
+  async addUserRoles(dto: AddUserRoleDto) {
     let addedRoles = 0;
-    console.log(dto);
     for (const roleValue of dto.roles) {
       const existingRole = await this.rolesRepository.findOneBy({
         value: roleValue,
@@ -109,7 +108,7 @@ export class RolesService implements OnModuleInit {
     }
     return userRoles;
   }
-  async deleteUserRoles(dto: UpdateUserRoleDto) {
+  async deleteUserRoles(dto: AddUserRoleDto) {
     let deletedRoles = 0;
     for (const roleValue of dto.roles) {
       const role = await this.getRoleByValue(roleValue);
