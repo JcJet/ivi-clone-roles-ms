@@ -71,9 +71,7 @@ export class RolesService implements OnModuleInit {
       const role = await this.rolesRepository.findOneBy({ value })
       roleId = role.id;
       await this.rolesRepository.delete({ value });
-
     } catch (e) {
-      throw e;
       throw new HttpException('Роль не найдена', HttpStatus.NOT_FOUND);
     }
     if (roleId) {
