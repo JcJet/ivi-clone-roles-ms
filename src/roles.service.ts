@@ -66,11 +66,20 @@ export class RolesService implements OnModuleInit {
     }
   }
   async deleteRoleByValue(value: string) {
+    let roleId: number;
     try {
-      return await this.rolesRepository.delete({ value });
+      const deletionResult = await this.rolesRepository.delete({ value });
+      roleId = deletionResult.raw[0].id;
     } catch (e) {
       throw new HttpException('Роль не найдена', HttpStatus.NOT_FOUND);
     }
+    if (roleId) {
+      const deletedRoles = 1;
+      const deletionResult = await this.userRolesRepository.delete({ roleId });
+      const affectedUsers = deletionResult.affected;
+      return { deletedRoles, affectedUsers };
+    }
+    return { deletedRoles: 0 };
   }
 
   async addUserRoles(dto: AddUserRoleDto) {
