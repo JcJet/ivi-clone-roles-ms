@@ -1,6 +1,6 @@
 import {
   HttpException,
-  HttpStatus,
+  HttpStatus, Inject,
   Injectable,
   OnModuleInit,
 } from '@nestjs/common';
@@ -11,6 +11,8 @@ import { Repository } from 'typeorm';
 import { UserRoles } from './roles_users.entity';
 import { AddUserRoleRecordDto } from './dto/addUserRoleRecord.dto';
 import { AddUserRoleDto } from './dto/addUserRole.dto';
+import {ClientProxy} from "@nestjs/microservices";
+import {lastValueFrom} from "rxjs";
 
 @Injectable()
 export class RolesService implements OnModuleInit {
@@ -19,7 +21,16 @@ export class RolesService implements OnModuleInit {
     private rolesRepository: Repository<Role>,
     @InjectRepository(UserRoles)
     private userRolesRepository: Repository<UserRoles>,
+    @Inject('TO_AUTH_MS') private toAuthProxy: ClientProxy,
   ) {}
+  async checkUserExists(userId) {
+    const user = await lastValueFrom(
+      this.toAuthProxy.send({ cmd: 'getUser' }, { userId }),
+    );
+    if (!user) {
+      throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
+    }
+  }
   async onModuleInit() {
     const initialRoles: RoleDto[] = [
       { value: 'ADMIN', description: 'Admin user' },
@@ -50,18 +61,38 @@ export class RolesService implements OnModuleInit {
     return rolesInsertResult.raw[0];
   }
   async getRoleById(id: number) {
-    return await this.rolesRepository.findOneBy({ id });
+    const role = await this.rolesRepository.findOneBy({ id });
+    if (!role) {
+      throw new HttpException('Роль не найдена', HttpStatus.NOT_FOUND);
+    }
+    return role;
   }
   async getRoleByValue(value: string) {
-    return await this.rolesRepository.findOneBy({ value });
+    const role = await this.rolesRepository.findOneBy({ value });
+    if (!role) {
+      throw new HttpException('Роль не найдена', HttpStatus.NOT_FOUND);
+    }
+    return role;
   }
   async getAllRoles() {
     return await this.rolesRepository.find();
   }
   async updateRole(id: number, dto: RoleDto) {
+    const existingRole = await this.rolesRepository.findOneBy({
+      value: dto.value,
+    });
+
+    if (existingRole) {
+      throw new HttpException(
+        'Роль с таким названием уже существует',
+        HttpStatus.CONFLICT,
+      );
+    }
+
     try {
       return await this.rolesRepository.update({ id }, dto);
     } catch (e) {
+      throw e;
       throw new HttpException('Роль не найдена', HttpStatus.NOT_FOUND);
     }
   }
@@ -84,6 +115,7 @@ export class RolesService implements OnModuleInit {
   }
 
   async addUserRoles(dto: AddUserRoleDto) {
+    await this.checkUserExists(dto.userId);
     let addedRoles = 0;
     for (const roleValue of dto.roles) {
       const existingRole = await this.rolesRepository.findOneBy({
@@ -108,6 +140,7 @@ export class RolesService implements OnModuleInit {
     return { addedRoles };
   }
   async getUserRoles(userId: number) {
+    await this.checkUserExists(userId);
     const userRoles: Role[] = [];
     const rolesUsers = await this.userRolesRepository.find({
       where: { userId },
@@ -119,6 +152,7 @@ export class RolesService implements OnModuleInit {
     return userRoles;
   }
   async deleteUserRoles(dto: AddUserRoleDto) {
+    await this.checkUserExists(dto.userId);
     let deletedRoles = 0;
     for (const roleValue of dto.roles) {
       const role = await this.getRoleByValue(roleValue);

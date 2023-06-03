@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { RolesController } from './roles.controller';
 import { RolesService } from './roles.service';
-import { ConfigModule } from '@nestjs/config';
+import {ConfigModule, ConfigService} from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from './roles.entity';
 import { UserRoles } from './roles_users.entity';
+import {ClientsModule, Transport} from "@nestjs/microservices";
 
 @Module({
   imports: [
@@ -12,16 +13,23 @@ import { UserRoles } from './roles_users.entity';
       //isGlobal: true,
       envFilePath: `.${process.env.NODE_ENV}.env`,
     }),
-/*    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: databaseHost,
-      port: 5432,
-      username: 'admin',
-      password: 'admin',
-      database: 'roles',
-      entities: [Role, UserRoles],
-      synchronize: true,
-    }),*/
+    ClientsModule.registerAsync([
+      {
+        name: 'TO_AUTH_MS',
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('RMQ_URL')],
+            queue: 'toAuthMs',
+            queueOptions: {
+              durable: false,
+            },
+          },
+        }),
+        inject: [ConfigService],
+        imports: [ConfigModule],
+      },
+    ]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
