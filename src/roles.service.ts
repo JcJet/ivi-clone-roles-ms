@@ -68,9 +68,12 @@ export class RolesService implements OnModuleInit {
   async deleteRoleByValue(value: string) {
     let roleId: number;
     try {
-      const deletionResult = await this.rolesRepository.delete({ value });
-      roleId = deletionResult.raw[0].id;
+      const role = await this.rolesRepository.findOneBy({ value })
+      roleId = role.id;
+      await this.rolesRepository.delete({ value });
+
     } catch (e) {
+      throw e;
       throw new HttpException('Роль не найдена', HttpStatus.NOT_FOUND);
     }
     if (roleId) {
