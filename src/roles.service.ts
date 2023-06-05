@@ -1,6 +1,7 @@
 import {
   HttpException,
-  HttpStatus, Inject,
+  HttpStatus,
+  Inject,
   Injectable,
   OnModuleInit,
 } from '@nestjs/common';
@@ -11,8 +12,9 @@ import { Repository } from 'typeorm';
 import { UserRoles } from './roles_users.entity';
 import { AddUserRoleRecordDto } from './dto/addUserRoleRecord.dto';
 import { AddUserRoleDto } from './dto/addUserRole.dto';
-import {ClientProxy} from "@nestjs/microservices";
-import {lastValueFrom} from "rxjs";
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
+import { logCall } from './decorators/logging-decorator';
 
 @Injectable()
 export class RolesService implements OnModuleInit {
@@ -23,6 +25,7 @@ export class RolesService implements OnModuleInit {
     private userRolesRepository: Repository<UserRoles>,
     @Inject('TO_AUTH_MS') private toAuthProxy: ClientProxy,
   ) {}
+  @logCall()
   async checkUserExists(userId) {
     const user = await lastValueFrom(
       this.toAuthProxy.send({ cmd: 'getUser' }, { userId }),
@@ -46,6 +49,7 @@ export class RolesService implements OnModuleInit {
       }
     }
   }
+  @logCall()
   async createRole(dto: RoleDto) {
     const existingRole = await this.rolesRepository.findOneBy({
       value: dto.value,
@@ -60,6 +64,7 @@ export class RolesService implements OnModuleInit {
     const rolesInsertResult = await this.rolesRepository.insert(dto);
     return rolesInsertResult.raw[0];
   }
+  @logCall()
   async getRoleById(id: number) {
     const role = await this.rolesRepository.findOneBy({ id });
     if (!role) {
@@ -67,6 +72,7 @@ export class RolesService implements OnModuleInit {
     }
     return role;
   }
+  @logCall()
   async getRoleByValue(value: string) {
     const role = await this.rolesRepository.findOneBy({ value });
     if (!role) {
@@ -74,9 +80,11 @@ export class RolesService implements OnModuleInit {
     }
     return role;
   }
+  @logCall()
   async getAllRoles() {
     return await this.rolesRepository.find();
   }
+  @logCall()
   async updateRole(id: number, dto: RoleDto) {
     const existingRole = await this.rolesRepository.findOneBy({
       value: dto.value,
@@ -96,10 +104,11 @@ export class RolesService implements OnModuleInit {
       throw new HttpException('Роль не найдена', HttpStatus.NOT_FOUND);
     }
   }
+  @logCall()
   async deleteRoleByValue(value: string) {
     let roleId: number;
     try {
-      const role = await this.rolesRepository.findOneBy({ value })
+      const role = await this.rolesRepository.findOneBy({ value });
       roleId = role.id;
       await this.rolesRepository.delete({ value });
     } catch (e) {
@@ -113,7 +122,7 @@ export class RolesService implements OnModuleInit {
     }
     return { deletedRoles: 0 };
   }
-
+  @logCall()
   async addUserRoles(dto: AddUserRoleDto) {
     await this.checkUserExists(dto.userId);
     let addedRoles = 0;
@@ -139,6 +148,7 @@ export class RolesService implements OnModuleInit {
     }
     return { addedRoles };
   }
+  @logCall()
   async getUserRoles(userId: number) {
     await this.checkUserExists(userId);
     const userRoles: Role[] = [];
@@ -151,6 +161,7 @@ export class RolesService implements OnModuleInit {
     }
     return userRoles;
   }
+  @logCall()
   async deleteUserRoles(dto: AddUserRoleDto) {
     await this.checkUserExists(dto.userId);
     let deletedRoles = 0;
