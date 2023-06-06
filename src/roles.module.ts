@@ -1,16 +1,15 @@
 import { Module } from '@nestjs/common';
 import { RolesController } from './roles.controller';
 import { RolesService } from './roles.service';
-import {ConfigModule, ConfigService} from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from './roles.entity';
 import { UserRoles } from './roles_users.entity';
-import {ClientsModule, Transport} from "@nestjs/microservices";
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      //isGlobal: true,
       envFilePath: `.${process.env.NODE_ENV}.env`,
     }),
     ClientsModule.registerAsync([
