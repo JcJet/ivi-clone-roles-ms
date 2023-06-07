@@ -25,8 +25,13 @@ export class RolesService implements OnModuleInit {
     private userRolesRepository: Repository<UserRoles>,
     @Inject('TO_AUTH_MS') private toAuthProxy: ClientProxy,
   ) {}
+
   @logCall()
-  private async checkUserExists(userId) {
+  async getRepository(): Promise<Repository<Role>> {
+    return this.rolesRepository;
+  }
+  @logCall()
+  async checkUserExists(userId) {
     const user = await lastValueFrom(
       this.toAuthProxy.send({ cmd: 'getUser' }, { userId }),
     );
